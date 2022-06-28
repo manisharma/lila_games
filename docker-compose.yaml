@@ -1,0 +1,45 @@
+version: '3.2'
+services:
+  postgres:
+    image: postgres:latest
+    container_name: game_postgres
+    restart: always
+    environment:
+      - POSTGRES_USER=${LILA_DB_USER}
+      - POSTGRES_PASSWORD=${LILA_DB_PASSWORD}
+      - POSTGRES_DB=${LILA_DB_DATABASE}
+    ports:
+      - 5432:5432
+    networks:
+      - games_network
+
+  game_app:
+    container_name: game_app
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - 1234:1234
+    restart: on-failure
+    depends_on:
+      - postgres
+    networks:
+      - games_network
+
+  postgres_explorer:
+    image: dpage/pgadmin4
+    container_name: game_postgres_explorer
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${LILA_DB_EXPLORER_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${LILA_DB_EXPLORER_PASSWORD}
+    depends_on:
+      - postgres
+    ports:
+      - "5050:80"
+    networks:
+      - games_network
+    restart: unless-stopped
+
+networks:
+  games_network:
+    driver: bridge
